@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stela's Closet</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    background-color: #fef7f0;
+    color: #333;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    background-color: #fff0f5;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { margin: 0; font-size: 2em; color: #dca0c6; }
+  #cart { background-color: #dca0c6; color: white; padding: 10px 15px; border-radius: 50px; cursor: pointer; }
+  .container { padding: 20px 40px; }
+  .category { margin-bottom: 50px; }
+  .category h2 { font-size: 1.8em; color: #dca0c6; margin-bottom: 20px; }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
+    gap: 20px;
+  }
+  .product {
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .product:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  }
+  .product img { width: 100%; object-fit: cover; height: 180px; }
+  .product-info {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  .product-info a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  .product-info .price { margin-bottom: 10px; }
+  .product-info button {
+    background-color: #dca0c6;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: auto;
+  }
+  #cart-overlay {
+    display: none;
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  #cart-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80%;
+    overflow-y: auto;
+  }
+  #cart-content h2 { margin-top:0; color:#dca0c6; }
+  #cart-content ul { list-style: none; padding:0; }
+  #cart-content li {
+    display:flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .remove-btn {
+    background: #ff6b6b;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 2px 6px;
+    cursor: pointer;
+  }
+  #close-cart {
+    cursor:pointer;
+    background:#dca0c6;
+    color:#fff;
+    border:none;
+    padding:5px 10px;
+    border-radius:5px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Stela's Closet</h1>
+  <div id="cart">🛒 <span id="cart-count">0€</span></div>
+</header>
+
+<div class="container">
+  
+  <div class="category" id="beauty">
+    <h2>Beauty</h2>
+    <div class="products-grid" id="beauty-products"></div>
+  </div>
+
+  <div class="category" id="technology">
+    <h2>Technology</h2>
+    <div class="products-grid" id="technology-products"></div>
+  </div>
+
+  <div class="category" id="room">
+    <h2>Room</h2>
+    <div class="products-grid" id="room-products"></div>
+  </div>
+
+</div>
+
+<div id="cart-overlay">
+  <div id="cart-content">
+    <button id="close-cart">Close</button>
+    <h2>Warenkorb</h2>
+    <ul id="cart-items"></ul>
+    <p><strong>Gesamt: <span id="cart-total">0€</span></strong></p>
+  </div>
+</div>
+
+<script>
+const products = {
+  beauty: [
+    {
+      name:"Sky High Mascara",
+      price:11.95,
+      link:"https://www.dm.de/applink/maybelline-new-york-mascara-lash-sensational-sky-high-very-black-p30166967.html",
+      img:"https://static.dm.de/asset/product/1572018/large"
+    },
+    {
+      name:"Mielle Rosemary Oil",
+      price:12.29,
+      link:"https://amzn.eu/d/6xNGZEM",
+      img:"https://images-na.ssl-images-amazon.com/images/I/61GVpXzXfNL._SL1500_.jpg"
+    },
+    {
+      name:"Lash Serum",
+      price:12,
+      link:"https://www.douglas.de/de/p/5010641090",
+      img:"https://images.douglas.de/douglas/5010641090.jpg"
+    },
+    {
+      name:"Milk MakeUp Jelly Blush",
+      price:27,
+      link:"https://www.douglas.de/de/p/5011439043?variant=1180608",
+      img:"https://images.douglas.de/douglas/5011439043.jpg"
+    },
+    {
+      name:"UV Lamp",
+      price:10,
+      link:"https://amzn.eu/d/epRKX4b",
+      img:"https://m.media-amazon.com/images/I/61X3K8K4X1L._AC_SL1500_.jpg"
+    },
+    {
+      name:"Builder Gel",
+      price:16,
+      link:"https://amzn.eu/d/4bqHHQX",
+      img:"https://m.media-amazon.com/images/I/61Qci84iO0L._AC_SL1500_.jpg"
+    }
+  ],
+  technology: [
+    {
+      name:"Room diffuser glade",
+      price:8.95,
+      link:"https://www.dm.de/applink/glade-lufterfrischer-aromatherapy-diffuser-moment-of-zen-starterset-p5000204219890.html",
+      img:"https://static.dm.de/asset/product/1616213/large"
+    },
+    {
+      name:"LED lights",
+      price:11,
+      link:"https://amzn.eu/d/eszUO7B",
+      img:"https://m.media-amazon.com/images/I/61u2qD7nSXL._AC_SL1000_.jpg"
+    },
+    {
+      name:"Wireless Charger",
+      price:30,
+      link:"https://amzn.eu/d/8iZaRsl",
+      img:"https://m.media-amazon.com/images/I/61zpN6PAkpL._AC_SL1500_.jpg"
+    }
+  ],
+  room: [
+    {
+      name:"Pen set",
+      price:21,
+      link:"https://www.faber-castell.de/produkte/Grip2010SetF%C3%BCllerKugelschreibercoconutmilk/201527",
+      img:"https://www.faber-castell.com/var/fc/storage/images/media-center/products/527_1.jpg"
+    },
+    {
+      name:"Peonies Fake",
+      price:10,
+      link:"https://amzn.eu/d/52ZdM3j",
+      img:"https://m.media-amazon.com/images/I/61F5pQbD7fL._AC_SL1200_.jpg"
+    },
+    {
+      name:"Satin-Pillowcase",
+      price:19,
+      link:"https://amzn.eu/d/1qKHrqV",
+      img:"https://m.media-amazon.com/images/I/71Y4oh51jFL._AC_SL1500_.jpg"
+    },
+    {
+      name:"Satin scrunchies",
+      price:8.50,
+      link:"https://amzn.eu/d/3JN6Py0",
+      img:"https://m.media-amazon.com/images/I/61p1m3bDPHL._AC_SL1000_.jpg"
+    },
+    {
+      name:"Set jewelry",
+      price:48,
+      link:"https://www.zalando.de/elli-set-ohrringe-silber-el051l2m1-d11.html",
+      img:"https://mosaic02.ztat.net/vgs/media/pdp-zoom/EL/05/1L/2M/01/EL051L2M1-D11@14.jpg"
+    }
+  ]
+};
+
+let cartTotal = 0;
+let cartItems = [];
+
+function renderProducts(){
+  for(const cat in products){
+    const container = document.getElementById(`${cat}-products`);
+    products[cat].forEach(prod => {
+      const div = document.createElement('div');
+      div.className='product';
+      div.innerHTML=`
+        <a href="${prod.link}" target="_blank">
+          <img src="${prod.img}" alt="${prod.name}">
+        </a>
+        <div class="product-info">
+          <a href="${prod.link}" target="_blank">${prod.name}</a>
+          <div class="price">${prod.price}€</div>
+          <button onclick="addToCart('${prod.name}', ${prod.price})">Add</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+}
+
+function addToCart(name, price){
+  cartTotal += price;
+  cartItems.push({name, price});
+  document.getElementById('cart-count').innerText = cartTotal.toFixed(2)+'€';
+}
+
+const cartOverlay = document.getElementById('cart-overlay');
+const cartDiv = document.getElementById('cart');
+const closeCart = document.getElementById('close-cart');
+const cartList = document.getElementById('cart-items');
+const cartTotalSpan = document.getElementById('cart-total');
+
+cartDiv.addEventListener('click', ()=>{
+  cartOverlay.style.display='flex';
+  renderCart();
+});
+closeCart.addEventListener('click', ()=>{
+  cartOverlay.style.display='none';
+});
+
+function renderCart(){
+  cartList.innerHTML='';
+  cartItems.forEach((item, index)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${item.name} - ${item.price}€
+      <button class="remove-btn" onclick="removeFromCart(${index})">✕</button>
+    `;
+    cartList.appendChild(li);
+  });
+  cartTotalSpan.textContent = cartTotal.toFixed(2)+'€';
+}
+
+function removeFromCart(index){
+  cartTotal -= cartItems[index].price;
+  cartItems.splice(index, 1);
+  document.getElementById('cart-count').innerText = cartTotal.toFixed(2)+'€';
+  renderCart();
+}
+
+renderProducts();
+</script>
+
+</body>
+</html>
+
